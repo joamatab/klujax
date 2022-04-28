@@ -13,17 +13,17 @@ klujax_cpp = Extension(
     sources=["klujax.cpp"],
     include_dirs=[
         f"{env}/include",
-        f"/usr/include",
+        "/usr/include",
         f"{env}/include/suitesparse",
-        f"/usr/include/suitesparse",
+        "/usr/include/suitesparse",
         f"{env}/include/{python}",
         f"{site_packages}/pybind11/include",
     ],
     library_dirs=[
         f"{env}/lib",
-        f"/usr/lib",
+        "/usr/lib",
         f"{env}/lib64",
-        f"/usr/lib64",
+        "/usr/lib64",
         f"{env}/lib/{python}",
         f"{env}/lib64/{python}",
         f"{site_packages}",
@@ -39,6 +39,7 @@ klujax_cpp = Extension(
     ],
     language="c++",
 )
+
 
 setup(
     name="klujax",

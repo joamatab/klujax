@@ -175,10 +175,10 @@ def solve_f64_value_and_jvp(arg_values, arg_tangents):
     # ∂x = A^{-1} (∂b - ∂A x)
     Ai, Aj, Ax, b = arg_values
     dAi, dAj, dAx, db = arg_tangents
-    dAx = dAx if not isinstance(dAx, ad.Zero) else lax.zeros_like_array(Ax)
-    dAi = dAi if not isinstance(dAi, ad.Zero) else lax.zeros_like_array(Ai)
-    dAj = dAj if not isinstance(dAj, ad.Zero) else lax.zeros_like_array(Aj)
-    db = db if not isinstance(db, ad.Zero) else lax.zeros_like_array(b)
+    dAx = lax.zeros_like_array(Ax) if isinstance(dAx, ad.Zero) else dAx
+    dAi = lax.zeros_like_array(Ai) if isinstance(dAi, ad.Zero) else dAi
+    dAj = lax.zeros_like_array(Aj) if isinstance(dAj, ad.Zero) else dAj
+    db = lax.zeros_like_array(b) if isinstance(db, ad.Zero) else db
 
     x = solve(Ai, Aj, Ax, b)
     dA_x = coo_mul_vec(Ai, Aj, dAx, x)
@@ -202,40 +202,40 @@ def solve_f64_transpose(ct, Ai, Aj, Ax, b):
 
 @jax.jit  # jitting by default allows for empty implementation definitions
 def solve(Ai, Aj, Ax, b):
-    if any(x.dtype in COMPLEX_DTYPES for x in (Ax, b)):
-        result = solve_c128.bind(
+    return (
+        solve_c128.bind(
             Ai.astype(jnp.int32),
             Aj.astype(jnp.int32),
             Ax.astype(jnp.complex128),
             b.astype(jnp.complex128),
         )
-    else:
-        result = solve_f64.bind(
+        if any(x.dtype in COMPLEX_DTYPES for x in (Ax, b))
+        else solve_f64.bind(
             Ai.astype(jnp.int32),
             Aj.astype(jnp.int32),
             Ax.astype(jnp.float64),
             b.astype(jnp.float64),
         )
-    return result
+    )
 
 
 @jax.jit  # jitting by default allows for empty implementation definitions
 def coo_mul_vec(Ai, Aj, Ax, b):
-    if any(x.dtype in COMPLEX_DTYPES for x in (Ax, b)):
-        result = coo_mul_vec_c128.bind(
+    return (
+        coo_mul_vec_c128.bind(
             Ai.astype(jnp.int32),
             Aj.astype(jnp.int32),
             Ax.astype(jnp.complex128),
             b.astype(jnp.complex128),
         )
-    else:
-        result = coo_mul_vec_f64.bind(
+        if any(x.dtype in COMPLEX_DTYPES for x in (Ax, b))
+        else coo_mul_vec_f64.bind(
             Ai.astype(jnp.int32),
             Aj.astype(jnp.int32),
             Ax.astype(jnp.float64),
             b.astype(jnp.float64),
         )
-    return result
+    )
 
 
 # ENABLE VMAP
